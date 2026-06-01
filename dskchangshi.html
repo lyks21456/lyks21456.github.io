@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理系统</title>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --primary-light: #34495e;
+            --accent: #3498db;
+            --accent-hover: #2980b9;
+            --success: #27ae60;
+            --success-hover: #219a52;
+            --warning: #f39c12;
+            --warning-hover: #e08e0b;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --bg: #ecf0f1;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #dce4e8;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background: #e8edf2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ============ 登录窗口 ============ */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .login-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .login-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(52, 152, 219, 0.12) 0%, transparent 55%),
+                radial-gradient(ellipse at 75% 60%, rgba(142, 68, 173, 0.10) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 80%, rgba(46, 204, 113, 0.08) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 25%, rgba(241, 196, 15, 0.07) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .login-bg-dots {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        .login-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 420px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: loginSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes loginSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .login-card .logo-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.35);
+        }
+        .login-card h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .login-card .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 32px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+        .login-card .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .login-card .input-group .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #95a5a6;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+        .login-card .input-group input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e0e5ea;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #f8f9fb;
+            color: #2c3e50;
+            transition: all 0.3s;
+            outline: none;
+            letter-spacing: 0.3px;
+        }
+        .login-card .input-group input:focus {
+            border-color: #3498db;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.08);
+        }
+        .login-card .input-group input:focus+.input-icon,
+        .login-card .input-group input:focus~.input-icon {
+            color: #3498db;
+        }
+        .login-card .btn-row {
+            display: flex;
+            gap: 14px;
+            margin-top: 28px;
+        }
+        .login-card .btn {
+            flex: 1;
+            padding: 13px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+        }
+        .btn-login:hover {
+            box-shadow: 0 8px 28px rgba(52, 152, 219, 0.45);
+            transform: translateY(-2px);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 14px rgba(52, 152, 219, 0.3);
+        }
+        .btn-exit-login {
+            background: #fff;
+            color: #7f8c8d;
+            border: 2px solid #e0e5ea;
+        }
+        .btn-exit-login:hover {
+            background: #f5f6f8;
+            border-color: #bdc3c7;
+            color: #555;
+            transform: translateY(-2px);
+        }
+        .btn-exit-login:active {
+            transform: translateY(0);
+        }
+        .login-error {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+            transition: all 0.3s;
+        }
+
+        /* ============ 主窗口 ============ */
+        .main-window {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            background: #e8edf2;
+        }
+        .main-window.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .main-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 10% 15%, rgba(52, 152, 219, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 70%, rgba(46, 204, 113, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 90%, rgba(155, 89, 182, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .main-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 菜单栏 */
+        .menubar {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e5ea;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            z-index: 10;
+            position: relative;
+            user-select: none;
+        }
+        .menubar .menu-item {
+            position: relative;
+            padding: 14px 22px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            letter-spacing: 0.4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .menubar .menu-item:hover {
+            background: #f0f4f8;
+            color: #3498db;
+        }
+        .menubar .menu-item.active {
+            background: #eef5fb;
+            color: #3498db;
+        }
+        .menubar .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #fff;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            min-width: 170px;
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid #e8ecf0;
+            border-top: none;
+        }
+        .menubar .menu-item:hover .dropdown,
+        .menubar .dropdown:hover {
+            display: block;
+        }
+        .menubar .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #2c3e50;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .menubar .dropdown-item:hover {
+            background: #f5f8fb;
+            color: #3498db;
+            padding-left: 26px;
+        }
+        .menubar .dropdown-item.danger {
+            color: #e74c3c;
+        }
+        .menubar .dropdown-item.danger:hover {
+            background: #fef5f5;
+            color: #c0392b;
+        }
+        /* 主体区域 */
+        .main-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+        .main-body .welcome-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
+            max-width: 500px;
+            width: 90%;
+        }
+        .main-body .welcome-card .welcome-icon {
+            font-size: 70px;
+            margin-bottom: 16px;
+        }
+        .main-body .welcome-card h2 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .main-body .welcome-card p {
+            color: #7f8c8d;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        /* 状态栏 */
+        .statusbar {
+            background: #ffffff;
+            border-top: 1px solid #e0e5ea;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #7f8c8d;
+            z-index: 10;
+            position: relative;
+            letter-spacing: 0.3px;
+        }
+        .statusbar .time-display {
+            font-weight: 600;
+            color: #2c3e50;
+            background: #f5f7fa;
+            padding: 6px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            font-variant-numeric: tabular-nums;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .statusbar .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(39, 174, 96, 0);
+            }
+        }
+
+        /* ============ 弹窗（年级设置/班级设置） ============ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-dialog {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            width: 620px;
+            max-width: 95vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .modal-overlay.visible .modal-dialog {
+            transform: translateY(0);
+        }
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #e8ecf0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fafbfc;
+        }
+        .modal-header h3 {
+            font-size: 17px;
+            color: #2c3e50;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+        .modal-header .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f2f5;
+            cursor: pointer;
+            font-size: 16px;
+            color: #7f8c8d;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-header .close-btn:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .modal-body {
+            padding: 20px 24px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .modal-body .form-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .modal-body .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 130px;
+        }
+        .modal-body .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .modal-body .form-group input,
+        .modal-body .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e0e5ea;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2c3e50;
+            background: #f9fafb;
+            transition: all 0.2s;
+            outline: none;
+            letter-spacing: 0.3px;
+        }
+        .modal-body .form-group input:focus,
+        .modal-body .form-group select:focus {
+            border-color: #3498db;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.06);
+        }
+        .modal-body .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-add {
+            background: #27ae60;
+            color: #fff;
+        }
+        .btn-add:hover {
+            background: #219a52;
+            box-shadow: 0 4px 14px rgba(39, 174, 96, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-edit {
+            background: #f39c12;
+            color: #fff;
+        }
+        .btn-edit:hover {
+            background: #e08e0b;
+            box-shadow: 0 4px 14px rgba(243, 156, 18, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+            box-shadow: 0 4px 14px rgba(231, 76, 60, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-exit {
+            background: #95a5a6;
+            color: #fff;
+        }
+        .btn-exit:hover {
+            background: #7f8c8d;
+            box-shadow: 0 4px 14px rgba(127, 140, 141, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-clear {
+            background: #fff;
+            color: #7f8c8d;
+            border: 2px solid #e0e5ea;
+        }
+        .btn-clear:hover {
+            background: #f5f6f8;
+            border-color: #bdc3c7;
+        }
+        /* 表格 */
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #e8ecf0;
+            border-radius: 10px;
+            max-height: 280px;
+            min-height: 150px;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .table-container thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .table-container thead th {
+            background: #f5f7fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e5ea;
+            letter-spacing: 0.4px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .table-container tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .table-container tbody tr:hover {
+            background: #f8fafc;
+        }
+        .table-container tbody tr.selected {
+            background: #eef5fb;
+            outline: 2px solid #3498db;
+            outline-offset: -2px;
+            border-radius: 0;
+        }
+        .table-container tbody td {
+            padding: 10px 14px;
+            color: #2c3e50;
+            letter-spacing: 0.2px;
+        }
+        .table-container .empty-row td {
+            text-align: center;
+            color: #bdc3c7;
+            padding: 30px;
+            font-style: italic;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            background: #27ae60;
+        }
+        .toast.error {
+            background: #e74c3c;
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- ==================== Toast提示 ==================== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ==================== 登录窗口 ==================== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-bg-pattern"></div>
+        <div class="login-bg-dots"></div>
+        <div class="login-card">
+            <div class="logo-icon">🎓</div>
+            <h2>学生管理系统</h2>
+            <p class="subtitle">请使用您的账号登录</p>
+            <div class="input-group">
+                <input type="text" id="usernameInput" placeholder="请输入账号" autocomplete="off">
+                <span class="input-icon">👤</span>
+            </div>
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="请输入密码">
+                <span class="input-icon">🔒</span>
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <div class="btn-row">
+                <button class="btn btn-login" id="btnLogin">登 录</button>
+                <button class="btn btn-exit-login" id="btnExitLogin">退 出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 主窗口 ==================== -->
+    <div class="main-window" id="mainWindow">
+        <div class="main-bg"></div>
+        <div class="main-content">
+            <!-- 菜单栏 -->
+            <div class="menubar" id="menubar">
+                <div class="menu-item" id="menuBasic">
+                    📋 基础设置
+                    <div class="dropdown" id="dropdownBasic">
+                        <div class="dropdown-item" id="menuGradeSetting">📝 年级设置</div>
+                        <div class="dropdown-item" id="menuClassSetting">🏫 班级设置</div>
+                    </div>
+                </div>
+                <div class="menu-item" id="menuSystem">
+                    ⚙️ 系统管理
+                    <div class="dropdown" id="dropdownSystem">
+                        <div class="dropdown-item danger" id="menuExit">🚪 退出系统</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 主体 -->
+            <div class="main-body">
+                <div class="welcome-card">
+                    <div class="welcome-icon">🏛️</div>
+                    <h2>欢迎使用学生管理系统</h2>
+                    <p>请通过上方菜单栏的 <strong>基础设置</strong> 进行年级和班级管理<br>或通过 <strong>系统管理</strong> 退出系统</p>
+                </div>
+            </div>
+            <!-- 状态栏 -->
+            <div class="statusbar">
+                <span><span class="status-dot"></span>系统运行中</span>
+                <span class="time-display" id="timeDisplay">--</span>
+                <span>学生管理系统 v1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 年级设置弹窗 ==================== -->
+    <div class="modal-overlay" id="gradeModalOverlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>📝 年级设置</h3>
+                <button class="close-btn" id="gradeModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>年级编号</label>
+                        <input type="text" id="gradeCodeInput" placeholder="例如：G2024">
+                    </div>
+                    <div class="form-group">
+                        <label>年级名称</label>
+                        <input type="text" id="gradeNameInput" placeholder="例如：2024级">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-add" id="btnGradeAdd">➕ 添加</button>
+                    <button class="btn btn-edit" id="btnGradeEdit">✏️ 修改</button>
+                    <button class="btn btn-delete" id="btnGradeDelete">🗑️ 删除</button>
+                    <button class="btn btn-clear" id="btnGradeClear">🔄 清空</button>
+                    <button class="btn btn-exit" id="btnGradeExit">🚪 退出</button>
+                </div>
+                <div class="table-container" id="gradeTableContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>年级编号</th>
+                                <th>年级名称</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradeTableBody">
+                            <tr class="empty-row"><td colspan="2">暂无年级数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 班级设置弹窗 ==================== -->
+    <div class="modal-overlay" id="classModalOverlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>🏫 班级设置</h3>
+                <button class="close-btn" id="classModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>班级编号</label>
+                        <input type="text" id="classCodeInput" placeholder="例如：C202401">
+                    </div>
+                    <div class="form-group">
+                        <label>所属年级</label>
+                        <select id="classGradeSelect">
+                            <option value="">请选择年级</option>
+                            <option value="大一">大一</option>
+                            <option value="大二">大二</option>
+                            <option value="大三">大三</option>
+                            <option value="大四">大四</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>班级名称</label>
+                        <input type="text" id="classNameInput" placeholder="例如：计算机科学1班">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-add" id="btnClassAdd">➕ 添加</button>
+                    <button class="btn btn-edit" id="btnClassEdit">✏️ 修改</button>
+                    <button class="btn btn-delete" id="btnClassDelete">🗑️ 删除</button>
+                    <button class="btn btn-clear" id="btnClassClear">🔄 清空</button>
+                    <button class="btn btn-exit" id="btnClassExit">🚪 退出</button>
+                </div>
+                <div class="table-container" id="classTableContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>班级编号</th>
+                                <th>所属年级</th>
+                                <th>班级名称</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classTableBody">
+                            <tr class="empty-row"><td colspan="3">暂无班级数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== 数据存储（使用localStorage模拟数据库） ====================
+            const STORAGE_KEY_GRADES = 'sms_grades';
+            const STORAGE_KEY_CLASSES = 'sms_classes';
+
+            function loadGrades() {
+                try {
+                    const data = localStorage.getItem(STORAGE_KEY_GRADES);
+                    return data ? JSON.parse(data) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveGrades(grades) {
+                localStorage.setItem(STORAGE_KEY_GRADES, JSON.stringify(grades));
+            }
+
+            function loadClasses() {
+                try {
+                    const data = localStorage.getItem(STORAGE_KEY_CLASSES);
+                    return data ? JSON.parse(data) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveClasses(classes) {
+                localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(classes));
+            }
+
+            let gradesData = loadGrades();
+            let classesData = loadClasses();
+
+            // ==================== DOM元素 ====================
+            // 登录
+            const loginOverlay = document.getElementById('loginOverlay');
+            const usernameInput = document.getElementById('usernameInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const loginError = document.getElementById('loginError');
+            const btnLogin = document.getElementById('btnLogin');
+            const btnExitLogin = document.getElementById('btnExitLogin');
+
+            // 主窗口
+            const mainWindow = document.getElementById('mainWindow');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const menuBasic = document.getElementById('menuBasic');
+            const dropdownBasic = document.getElementById('dropdownBasic');
+            const menuGradeSetting = document.getElementById('menuGradeSetting');
+            const menuClassSetting = document.getElementById('menuClassSetting');
+            const menuSystem = document.getElementById('menuSystem');
+            const dropdownSystem = document.getElementById('dropdownSystem');
+            const menuExit = document.getElementById('menuExit');
+
+            // 年级设置弹窗
+            const gradeModalOverlay = document.getElementById('gradeModalOverlay');
+            const gradeCodeInput = document.getElementById('gradeCodeInput');
+            const gradeNameInput = document.getElementById('gradeNameInput');
+            const gradeTableBody = document.getElementById('gradeTableBody');
+            const btnGradeAdd = document.getElementById('btnGradeAdd');
+            const btnGradeEdit = document.getElementById('btnGradeEdit');
+            const btnGradeDelete = document.getElementById('btnGradeDelete');
+            const btnGradeClear = document.getElementById('btnGradeClear');
+            const btnGradeExit = document.getElementById('btnGradeExit');
+            const gradeModalClose = document.getElementById('gradeModalClose');
+            let selectedGradeIndex = -1;
+
+            // 班级设置弹窗
+            const classModalOverlay = document.getElementById('classModalOverlay');
+            const classCodeInput = document.getElementById('classCodeInput');
+            const classGradeSelect = document.getElementById('classGradeSelect');
+            const classNameInput = document.getElementById('classNameInput');
+            const classTableBody = document.getElementById('classTableBody');
+            const btnClassAdd = document.getElementById('btnClassAdd');
+            const btnClassEdit = document.getElementById('btnClassEdit');
+            const btnClassDelete = document.getElementById('btnClassDelete');
+            const btnClassClear = document.getElementById('btnClassClear');
+            const btnClassExit = document.getElementById('btnClassExit');
+            const classModalClose = document.getElementById('classModalClose');
+            let selectedClassIndex = -1;
+
+            // Toast
+            const toast = document.getElementById('toast');
+
+            // ==================== Toast提示 ====================
+            let toastTimer;
+
+            function showToast(message, type = '') {
+                clearTimeout(toastTimer);
+                toast.textContent = message;
+                toast.className = 'toast ' + type + ' show';
+                toastTimer = setTimeout(() => {
+                    toast.className = 'toast';
+                }, 2200);
+            }
+
+            // ==================== 登录逻辑 ====================
+            const VALID_USERNAME = 'admin';
+            const VALID_PASSWORD = '123456';
+
+            btnLogin.addEventListener('click', () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (!username || !password) {
+                    loginError.textContent = '⚠️ 请输入账号和密码';
+                    return;
+                }
+
+                if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                    loginError.textContent = '';
+                    loginOverlay.classList.add('hidden');
+                    mainWindow.classList.add('visible');
+                    showToast('✅ 登录成功，欢迎使用学生管理系统！', 'success');
+                    updateTime();
+                } else {
+                    loginError.textContent = '❌ 账号或密码错误，请重试';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            });
+
+            btnExitLogin.addEventListener('click', () => {
+                if (confirm('确定要退出程序吗？')) {
+                    document.body.innerHTML =
+                        '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:20px;color:#7f8c8d;">👋 已退出，请关闭页面</div>';
+                }
+            });
+
+            // 回车键登录
+            passwordInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    btnLogin.click();
+                }
+            });
+            usernameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    passwordInput.focus();
+                }
+            });
+
+            // ==================== 实时时间 ====================
+            function updateTime() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                const weekday = weekdays[now.getDay()];
+                timeDisplay.textContent =
+                    `${year}-${month}-${day} 周${weekday} ${hours}:${minutes}:${seconds}`;
+                if (mainWindow.classList.contains('visible')) {
+                    requestAnimationFrame(() => {
+                        setTimeout(updateTime, 1000);
+                    });
+                }
+            }
+
+            // 初始时间显示
+            updateTime();
+            // 持续更新时间（即使在登录页面也更新）
+            setInterval(() => {
+                if (mainWindow.classList.contains('visible')) {
+                    updateTime();
+                } else {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const weekday = weekdays[now.getDay()];
+                    timeDisplay.textContent =
+                        `${year}-${month}-${day} 周${weekday} ${hours}:${minutes}:${seconds}`;
+                }
+            }, 1000);
+
+            // ==================== 菜单栏下拉（移动端兼容） ====================
+            // 对于移动端，点击菜单项切换下拉显示
+            menuBasic.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = dropdownBasic.style.display === 'block';
+                dropdownBasic.style.display = isVisible ? 'none' : 'block';
+                dropdownSystem.style.display = 'none';
+                if (!isVisible) {
+                    menuBasic.classList.add('active');
+                    menuSystem.classList.remove('active');
+                } else {
+                    menuBasic.classList.remove('active');
+                }
+            });
+
+            menuSystem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isVisible = dropdownSystem.style.display === 'block';
+                dropdownSystem.style.display = isVisible ? 'none' : 'block';
+                dropdownBasic.style.display = 'none';
+                if (!isVisible) {
+                    menuSystem.classList.add('active');
+                    menuBasic.classList.remove('active');
+                } else {
+                    menuSystem.classList.remove('active');
+                }
+            });
+
+            // 点击页面其他地方关闭下拉
+            document.addEventListener('click', () => {
+                dropdownBasic.style.display = 'none';
+                dropdownSystem.style.display = 'none';
+                menuBasic.classList.remove('active');
+                menuSystem.classList.remove('active');
+            });
+
+            // 下拉菜单项点击
+            menuGradeSetting.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownBasic.style.display = 'none';
+                menuBasic.classList.remove('active');
+                openGradeModal();
+            });
+
+            menuClassSetting.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownBasic.style.display = 'none';
+                menuBasic.classList.remove('active');
+                openClassModal();
+            });
+
+            menuExit.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownSystem.style.display = 'none';
+                menuSystem.classList.remove('active');
+                if (confirm('确定要退出系统吗？')) {
+                    mainWindow.classList.remove('visible');
+                    loginOverlay.classList.remove('hidden');
+                    usernameInput.value = '';
+                    passwordInput.value = '';
+                    loginError.textContent = '';
+                    closeGradeModal();
+                    closeClassModal();
+                    showToast('👋 已退出系统', '');
+                }
+            });
+
+            // ==================== 年级设置弹窗 ====================
+            function openGradeModal() {
+                gradeModalOverlay.classList.add('visible');
+                refreshGradeTable();
+                clearGradeForm();
+                selectedGradeIndex = -1;
+                gradeCodeInput.focus();
+            }
+
+            function closeGradeModal() {
+                gradeModalOverlay.classList.remove('visible');
+                clearGradeForm();
+                selectedGradeIndex = -1;
+            }
+
+            function clearGradeForm() {
+                gradeCodeInput.value = '';
+                gradeNameInput.value = '';
+                selectedGradeIndex = -1;
+                // 清除表格选中状态
+                const rows = gradeTableBody.querySelectorAll('tr');
+                rows.forEach(r => r.classList.remove('selected'));
+            }
+
+            function refreshGradeTable() {
+                gradeTableBody.innerHTML = '';
+                if (gradesData.length === 0) {
+                    gradeTableBody.innerHTML = '<tr class="empty-row"><td colspan="2">暂无年级数据</td></tr>';
+                } else {
+                    gradesData.forEach((grade, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHtml(grade.code)}</td>
+                            <td>${escapeHtml(grade.name)}</td>
+                        `;
+                        tr.addEventListener('click', () => {
+                            selectGradeRow(index, tr);
+                        });
+                        if (index === selectedGradeIndex) {
+                            tr.classList.add('selected');
+                        }
+                        gradeTableBody.appendChild(tr);
+                    });
+                }
+            }
+
+            function selectGradeRow(index, trElement) {
+                selectedGradeIndex = index;
+                const grade = gradesData[index];
+                gradeCodeInput.value = grade.code;
+                gradeNameInput.value = grade.name;
+                // 更新选中样式
+                const rows = gradeTableBody.querySelectorAll('tr');
+                rows.forEach(r => r.classList.remove('selected'));
+                if (trElement) trElement.classList.add('selected');
+            }
+
+            btnGradeAdd.addEventListener('click', () => {
+                const code = gradeCodeInput.value.trim();
+                const name = gradeNameInput.value.trim();
+                if (!code) {
+                    showToast('⚠️ 请输入年级编号', 'error');
+                    gradeCodeInput.focus();
+                    return;
+                }
+                if (!name) {
+                    showToast('⚠️ 请输入年级名称', 'error');
+                    gradeNameInput.focus();
+                    return;
+                }
+                // 检查重复
+                const exists = gradesData.some(g => g.code === code);
+                if (exists) {
+                    showToast('⚠️ 该年级编号已存在', 'error');
+                    return;
+                }
+                gradesData.push({ code, name });
+                saveGrades(gradesData);
+                refreshGradeTable();
+                clearGradeForm();
+                showToast('✅ 年级添加成功', 'success');
+            });
+
+            btnGradeEdit.addEventListener('click', () => {
+                if (selectedGradeIndex < 0 || selectedGradeIndex >= gradesData.length) {
+                    showToast('⚠️ 请先在表格中选择要修改的年级', 'error');
+                    return;
+                }
+                const code = gradeCodeInput.value.trim();
+                const name = gradeNameInput.value.trim();
+                if (!code) {
+                    showToast('⚠️ 请输入年级编号', 'error');
+                    gradeCodeInput.focus();
+                    return;
+                }
+                if (!name) {
+                    showToast('⚠️ 请输入年级名称', 'error');
+                    gradeNameInput.focus();
+                    return;
+                }
+                // 检查重复（排除自身）
+                const exists = gradesData.some((g, i) => g.code === code && i !== selectedGradeIndex);
+                if (exists) {
+                    showToast('⚠️ 该年级编号已被其他年级使用', 'error');
+                    return;
+                }
+                gradesData[selectedGradeIndex] = { code, name };
+                saveGrades(gradesData);
+                refreshGradeTable();
+                clearGradeForm();
+                showToast('✅ 年级修改成功', 'success');
+            });
+
+            btnGradeDelete.addEventListener('click', () => {
+                if (selectedGradeIndex < 0 || selectedGradeIndex >= gradesData.length) {
+                    showToast('⚠️ 请先在表格中选择要删除的年级', 'error');
+                    return;
+                }
+                const grade = gradesData[selectedGradeIndex];
+                if (!confirm(`确定要删除年级"${grade.name}（${grade.code}）"吗？\n此操作不可恢复。`)) {
+                    return;
+                }
+                // 同时删除该年级下的所有班级
+                const deletedClasses = classesData.filter(c => c.grade === grade.name);
+                if (deletedClasses.length > 0) {
+                    if (!confirm(
+                            `该年级下还有 ${deletedClasses.length} 个班级，删除年级将同时删除这些班级。\n确定继续吗？`
+                            )) {
+                        return;
+                    }
+                    classesData = classesData.filter(c => c.grade !== grade.name);
+                    saveClasses(classesData);
+                }
+                gradesData.splice(selectedGradeIndex, 1);
+                saveGrades(gradesData);
+                refreshGradeTable();
+                clearGradeForm();
+                refreshClassTableIfOpen();
+                showToast('✅ 年级删除成功', 'success');
+            });
+
+            btnGradeClear.addEventListener('click', () => {
+                clearGradeForm();
+                showToast('🔄 表单已清空', '');
+            });
+
+            btnGradeExit.addEventListener('click', closeGradeModal);
+            gradeModalClose.addEventListener('click', closeGradeModal);
+
+            // 点击遮罩关闭
+            gradeModalOverlay.addEventListener('click', function(e) {
+                if (e.target === gradeModalOverlay) {
+                    closeGradeModal();
+                }
+            });
+
+            // ESC关闭
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (gradeModalOverlay.classList.contains('visible')) {
+                        closeGradeModal();
+                    }
+                    if (classModalOverlay.classList.contains('visible')) {
+                        closeClassModal();
+                    }
+                }
+            });
+
+            // ==================== 班级设置弹窗 ====================
+            function openClassModal() {
+                classModalOverlay.classList.add('visible');
+                refreshClassTable();
+                clearClassForm();
+                selectedClassIndex = -1;
+                classCodeInput.focus();
+            }
+
+            function closeClassModal() {
+                classModalOverlay.classList.remove('visible');
+                clearClassForm();
+                selectedClassIndex = -1;
+            }
+
+            function clearClassForm() {
+                classCodeInput.value = '';
+                classGradeSelect.value = '';
+                classNameInput.value = '';
+                selectedClassIndex = -1;
+                const rows = classTableBody.querySelectorAll('tr');
+                rows.forEach(r => r.classList.remove('selected'));
+            }
+
+            function refreshClassTable() {
+                classTableBody.innerHTML = '';
+                if (classesData.length === 0) {
+                    classTableBody.innerHTML = '<tr class="empty-row"><td colspan="3">暂无班级数据</td></tr>';
+                } else {
+                    classesData.forEach((cls, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${escapeHtml(cls.code)}</td>
+                            <td>${escapeHtml(cls.grade)}</td>
+                            <td>${escapeHtml(cls.name)}</td>
+                        `;
+                        tr.addEventListener('click', () => {
+                            selectClassRow(index, tr);
+                        });
+                        if (index === selectedClassIndex) {
+                            tr.classList.add('selected');
+                        }
+                        classTableBody.appendChild(tr);
+                    });
+                }
+            }
+
+            function refreshClassTableIfOpen() {
+                if (classModalOverlay.classList.contains('visible')) {
+                    refreshClassTable();
+                }
+            }
+
+            function selectClassRow(index, trElement) {
+                selectedClassIndex = index;
+                const cls = classesData[index];
+                classCodeInput.value = cls.code;
+                classGradeSelect.value = cls.grade;
+                classNameInput.value = cls.name;
+                const rows = classTableBody.querySelectorAll('tr');
+                rows.forEach(r => r.classList.remove('selected'));
+                if (trElement) trElement.classList.add('selected');
+            }
+
+            btnClassAdd.addEventListener('click', () => {
+                const code = classCodeInput.value.trim();
+                const grade = classGradeSelect.value;
+                const name = classNameInput.value.trim();
+                if (!code) {
+                    showToast('⚠️ 请输入班级编号', 'error');
+                    classCodeInput.focus();
+                    return;
+                }
+                if (!grade) {
+                    showToast('⚠️ 请选择所属年级', 'error');
+                    classGradeSelect.focus();
+                    return;
+                }
+                if (!name) {
+                    showToast('⚠️ 请输入班级名称', 'error');
+                    classNameInput.focus();
+                    return;
+                }
+                const exists = classesData.some(c => c.code === code);
+                if (exists) {
+                    showToast('⚠️ 该班级编号已存在', 'error');
+                    return;
+                }
+                classesData.push({ code, grade, name });
+                saveClasses(classesData);
+                refreshClassTable();
+                clearClassForm();
+                showToast('✅ 班级添加成功', 'success');
+            });
+
+            btnClassEdit.addEventListener('click', () => {
+                if (selectedClassIndex < 0 || selectedClassIndex >= classesData.length) {
+                    showToast('⚠️ 请先在表格中选择要修改的班级', 'error');
+                    return;
+                }
+                const code = classCodeInput.value.trim();
+                const grade = classGradeSelect.value;
+                const name = classNameInput.value.trim();
+                if (!code) {
+                    showToast('⚠️ 请输入班级编号', 'error');
+                    classCodeInput.focus();
+                    return;
+                }
+                if (!grade) {
+                    showToast('⚠️ 请选择所属年级', 'error');
+                    classGradeSelect.focus();
+                    return;
+                }
+                if (!name) {
+                    showToast('⚠️ 请输入班级名称', 'error');
+                    classNameInput.focus();
+                    return;
+                }
+                const exists = classesData.some((c, i) => c.code === code && i !== selectedClassIndex);
+                if (exists) {
+                    showToast('⚠️ 该班级编号已被其他班级使用', 'error');
+                    return;
+                }
+                classesData[selectedClassIndex] = { code, grade, name };
+                saveClasses(classesData);
+                refreshClassTable();
+                clearClassForm();
+                showToast('✅ 班级修改成功', 'success');
+            });
+
+            btnClassDelete.addEventListener('click', () => {
+                if (selectedClassIndex < 0 || selectedClassIndex >= classesData.length) {
+                    showToast('⚠️ 请先在表格中选择要删除的班级', 'error');
+                    return;
+                }
+                const cls = classesData[selectedClassIndex];
+                if (!confirm(`确定要删除班级"${cls.name}（${cls.code}）"吗？\n此操作不可恢复。`)) {
+                    return;
+                }
+                classesData.splice(selectedClassIndex, 1);
+                saveClasses(classesData);
+                refreshClassTable();
+                clearClassForm();
+                showToast('✅ 班级删除成功', 'success');
+            });
+
+            btnClassClear.addEventListener('click', () => {
+                clearClassForm();
+                showToast('🔄 表单已清空', '');
+            });
+
+            btnClassExit.addEventListener('click', closeClassModal);
+            classModalClose.addEventListener('click', closeClassModal);
+
+            classModalOverlay.addEventListener('click', function(e) {
+                if (e.target === classModalOverlay) {
+                    closeClassModal();
+                }
+            });
+
+            // ==================== 工具函数 ====================
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ==================== 初始化 ====================
+            // 默认焦点
+            usernameInput.focus();
+
+            // 如果之前已登录（页面刷新后），显示登录页
+            loginOverlay.classList.remove('hidden');
+            mainWindow.classList.remove('visible');
+
+            // 初始渲染表格
+            refreshGradeTable();
+            refreshClassTable();
+
+            console.log('🎓 学生管理系统已就绪');
+            console.log('📋 默认账号: admin / 123456');
+            console.log('💾 数据存储在浏览器 localStorage 中');
+            console.log('🖼️ 登录窗口和主窗口均支持背景图（通过CSS背景实现）');
+            console.log('🕐 底部状态栏实时显示当前时间');
+        })();
+    </script>
+</body>
+</html>
