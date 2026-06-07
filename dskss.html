@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>拾光集 · 记录我喜欢的内容</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        /* 整体背景容器：动态背景图 + 半透白膜 */
+        body {
+            min-height: 100vh;
+            background-color: #f5efe9; /* fallback */
+            transition: background-image 0.4s ease;
+        }
+
+        /* 白色半透明薄膜层：保证浅色半透明基底，同时让文字对比舒适 */
+        .glass-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(1px);
+            z-index: -1;
+        }
+
+        /* 真正的背景层：可更换图片，铺满固定 */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            z-index: -2;
+        }
+
+        /* 主容器 */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 顶部栏 (毛玻璃 + 半透明) */
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), 0 1px 1px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .title-area {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .title-area h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #4f4b45, #2f2b26);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .record-count {
+            background: rgba(120, 100, 80, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #5a4e44;
+            border: 1px solid rgba(255,255,240,0.7);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn-glass {
+            background: rgba(255, 245, 235, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            padding: 0.5rem 1.3rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a3e34;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-glass i {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 245, 0.8);
+            border-color: rgba(200, 180, 150, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 卡片网格 瀑布流式 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.8rem;
+        }
+
+        /* 毛玻璃卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(14px);
+            border-radius: 1.5rem;
+            padding: 1.4rem 1.2rem 1.2rem 1.2rem;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255, 245, 235, 0.7);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 245, 0.65);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
+            border-color: rgba(210, 180, 150, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #2d2a26;
+            line-height: 1.3;
+            word-break: break-word;
+            letter-spacing: -0.2px;
+            flex: 1;
+        }
+
+        .card-badge {
+            background: rgba(190, 165, 140, 0.3);
+            border-radius: 40px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #6c5a48;
+            backdrop-filter: blur(2px);
+            white-space: nowrap;
+        }
+
+        .card-content {
+            font-size: 0.95rem;
+            line-height: 1.45;
+            color: #3f3a35;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            border-top: 1px solid rgba(150, 130, 110, 0.2);
+            padding-top: 0.7rem;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #8a7a6a;
+            transition: all 0.2s;
+            padding: 0.3rem 0.5rem;
+            border-radius: 2rem;
+            backdrop-filter: blur(2px);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 240, 225, 0.8);
+            color: #c96b2e;
+            transform: scale(0.96);
+        }
+
+        /* 模态框（毛玻璃弹窗） */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(220, 205, 185, 0.3);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 250, 240, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 2rem 1.8rem;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 245, 0.9);
+            transition: all 0.2s;
+        }
+
+        .modal-card h3 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #4a3b2e;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: #6b5a48;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 245, 0.8);
+            border: 1px solid rgba(180, 155, 130, 0.4);
+            border-radius: 1.5rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: #dbb47a;
+            background: rgba(255, 255, 240, 0.95);
+            box-shadow: 0 0 0 2px rgba(220, 160, 90, 0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-modal {
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            background: rgba(230, 210, 185, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-primary {
+            background: #d9c2a5;
+            color: #2f2a24;
+            border: 1px solid rgba(255, 245, 225, 0.8);
+        }
+
+        .btn-primary:hover {
+            background: #cbad87;
+        }
+
+        /* 背景选择器面板 */
+        .bg-picker-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            display: flex;
+            gap: 0.6rem;
+            background: rgba(245, 235, 220, 0.6);
+            backdrop-filter: blur(12px);
+            padding: 0.5rem 1rem;
+            border-radius: 3rem;
+            border: 1px solid rgba(255, 245, 235, 0.9);
+        }
+
+        .bg-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 1rem;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+
+        .bg-thumb.active {
+            border-color: #c7a074;
+            transform: scale(1.02);
+        }
+
+        .upload-bg {
+            background: rgba(200, 180, 150, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #5f4c38;
+            cursor: pointer;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255,255,245,0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            color: #887a6a;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        /* 响应式 */
+        @media (max-width: 650px) {
+            .app-container {
+                padding: 1rem;
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-buttons {
+                justify-content: flex-end;
+            }
+            .bg-picker-panel {
+                bottom: 15px;
+                right: 15px;
+                padding: 0.4rem 0.8rem;
+            }
+            .bg-thumb {
+                width: 38px;
+                height: 38px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 动态背景层 -->
+<div class="bg-layer" id="bgLayer"></div>
+<!-- 固定半透白膜，确保整体半透明浅色风格 -->
+<div class="glass-overlay"></div>
+
+<div class="app-container">
+    <div class="top-bar">
+        <div class="title-area">
+            <h1>✨ 拾光集</h1>
+            <div class="record-count" id="recordCount">0 件喜欢</div>
+        </div>
+        <div class="action-buttons">
+            <button class="btn-glass" id="openAddModalBtn">+ 新记录</button>
+            <button class="btn-glass" id="openBgPanelBtn">🎨 换背景</button>
+        </div>
+    </div>
+
+    <div class="cards-grid" id="cardsGrid">
+        <!-- 动态卡片会渲染在这里 -->
+        <div class="empty-message">📭 还没有记录～ 点击「新记录」存放你的喜爱</div>
+    </div>
+</div>
+
+<!-- 背景选择浮动栏 (默认隐藏一点小逻辑，始终显示, 轻量化) -->
+<div class="bg-picker-panel" id="bgPickerPanel" style="display: flex;">
+    <!-- 预设浅色图片缩略图会由js动态生成, 加上本地上传 -->
+</div>
+
+<!-- 模态框：新增/编辑 -->
+<div class="modal" id="editModal">
+    <div class="modal-card">
+        <h3 id="modalTitle">添加喜欢</h3>
+        <input type="hidden" id="editId" value="">
+        <div class="input-group">
+            <label>🏷️ 标题</label>
+            <input type="text" id="itemTitle" placeholder="例：海边日记 / 喜欢的电影《入殓师》" maxlength="80">
+        </div>
+        <div class="input-group">
+            <label>📝 描述 / 备注</label>
+            <textarea id="itemDesc" rows="3" placeholder="记录为何喜欢它... 感受或细节"></textarea>
+        </div>
+        <div class="input-group">
+            <label>🏷️ 标签 (可选)</label>
+            <input type="text" id="itemTag" placeholder="例：电影、音乐、句子、风景">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-modal" id="cancelModalBtn">取消</button>
+            <button class="btn-modal btn-primary" id="saveItemBtn">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 存储KEY ----------
+    const STORAGE_KEY = 'shine_fav_records';
+    // 预设背景图片 (全都是浅色系、半透明风格)
+    const PRESET_BGS = [
+        { name: '晨雾山林', url: 'https://picsum.photos/id/104/1920/1080?grayscale&seed=1' },    // 浅色湖景
+        { name: '米色纸纹', url: 'https://picsum.photos/id/106/1920/1080?grayscale&seed=2' },
+        { name: '淡粉花瓣', url: 'https://picsum.photos/id/96/1920/1080?grayscale&seed=3' },
+        { name: '亚麻布纹', url: 'https://picsum.photos/id/20/1920/1080?grayscale&seed=4' },
+        { name: '淡蓝水彩', url: 'https://picsum.photos/id/30/1920/1080?grayscale&seed=5' }
+    ];
+    // 默认第三张偏粉一点的风格让视觉舒适，但需要确保都浅色调，url 都偏灰度/明亮
+    // 为了让图片更浅且柔和，我们再加一层半透白膜body已有玻璃-overlay，另外一些原图也许深，不过因为上面有白色薄膜55%不透明度，视觉整体浅色。
+
+    let records = [];      // 存储 { id, title, description, tag, createdAt }
+    let currentEditId = null;
+
+    // 当前背景图片URL
+    let currentBgUrl = PRESET_BGS[2].url;   // 默认淡粉花瓣风格
+
+    // ---- DOM 元素 ----
+    const cardsGrid = document.getElementById('cardsGrid');
+    const recordCountSpan = document.getElementById('recordCount');
+    const openAddModalBtn = document.getElementById('openAddModalBtn');
+    const openBgPanelBtn = document.getElementById('openBgPanelBtn');
+    const editModal = document.getElementById('editModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const editIdInput = document.getElementById('editId');
+    const itemTitleInput = document.getElementById('itemTitle');
+    const itemDescInput = document.getElementById('itemDesc');
+    const itemTagInput = document.getElementById('itemTag');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const saveItemBtn = document.getElementById('saveItemBtn');
+    const bgPickerPanel = document.getElementById('bgPickerPanel');
+
+    // ----- 数据操作 -----
+    function loadRecords() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                records = JSON.parse(stored);
+                if (!Array.isArray(records)) records = [];
+            } catch(e) { records = []; }
+        }
+        if (!records || records.length === 0) {
+            // 可选放一条demo
+            records = [];
+            // 保持空列表
+        }
+        // 保证每条都有完整字段
+        records = records.map(r => ({
+            id: r.id,
+            title: r.title || '无标题',
+            description: r.description || '',
+            tag: r.tag || '',
+            createdAt: r.createdAt || Date.now()
+        }));
+        renderCards();
+        updateCount();
+    }
+
+    function saveToLocal() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        renderCards();
+        updateCount();
+    }
+
+    function updateCount() {
+        const len = records.length;
+        recordCountSpan.innerText = `${len} 件喜欢`;
+    }
+
+    // 渲染卡片 (毛玻璃效果)
+    function renderCards() {
+        if (!cardsGrid) return;
+        if (!records.length) {
+            cardsGrid.innerHTML = `<div class="empty-message">🍃 收集喜欢的事物 · 温柔世界里的光<br>点击「新记录」开始吧</div>`;
+            return;
+        }
+        const cardsHtml = records.map(record => {
+            const displayTag = record.tag ? `<span class="card-badge">${escapeHtml(record.tag)}</span>` : '';
+            const displayDesc = record.description ? escapeHtml(record.description) : '<span style="opacity:0.65;">没有描述，但喜欢就够了 ✨</span>';
+            return `
+                <div class="card" data-id="${record.id}">
+                    <div class="card-header">
+                        <div class="card-title">${escapeHtml(record.title)}</div>
+                        ${displayTag}
+                    </div>
+                    <div class="card-content">${displayDesc.replace(/\n/g, '<br>')}</div>
+                    <div class="card-footer">
+                        <button class="icon-btn edit-card" data-id="${record.id}" data-action="edit">✏️ 编辑</button>
+                        <button class="icon-btn delete-card" data-id="${record.id}" data-action="delete">🗑️ 删除</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        cardsGrid.innerHTML = cardsHtml;
+
+        // 绑定卡片内部按钮事件
+        document.querySelectorAll('.edit-card').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                openEditModal(id);
+            });
+        });
+        document.querySelectorAll('.delete-card').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                if (confirm('删除这条喜欢吗？')) {
+                    deleteRecordById(id);
+                }
+            });
+        });
+    }
+
+    function deleteRecordById(id) {
+        records = records.filter(r => r.id !== id);
+        saveToLocal();
+    }
+
+    function addOrUpdateRecord(item) {
+        if (item.id) {
+            // 更新
+            const index = records.findIndex(r => r.id === item.id);
+            if (index !== -1) {
+                records[index] = { ...records[index], ...item };
+            }
+        } else {
+            // 新增
+            const newId = Date.now();
+            records.unshift({
+                id: newId,
+                title: item.title,
+                description: item.description,
+                tag: item.tag,
+                createdAt: newId
+            });
+        }
+        saveToLocal();
+        closeModal();
+    }
+
+    function openEditModal(id) {
+        const record = records.find(r => r.id === id);
+        if (!record) return;
+        currentEditId = id;
+        editIdInput.value = id;
+        itemTitleInput.value = record.title || '';
+        itemDescInput.value = record.description || '';
+        itemTagInput.value = record.tag || '';
+        modalTitle.innerText = '编辑喜欢的内容';
+        editModal.style.display = 'flex';
+    }
+
+    function openAddModal() {
+        currentEditId = null;
+        editIdInput.value = '';
+        itemTitleInput.value = '';
+        itemDescInput.value = '';
+        itemTagInput.value = '';
+        modalTitle.innerText = '💖 记录新的喜欢';
+        editModal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        editModal.style.display = 'none';
+        currentEditId = null;
+        editIdInput.value = '';
+    }
+
+    function handleSave() {
+        const title = itemTitleInput.value.trim();
+        if (!title) {
+            alert('请填写标题～ 记录一下喜欢什么');
+            return;
+        }
+        const description = itemDescInput.value.trim();
+        const tag = itemTagInput.value.trim();
+        const editIdVal = editIdInput.value;
+        if (editIdVal) {
+            const id = parseInt(editIdVal);
+            addOrUpdateRecord({ id, title, description, tag });
+        } else {
+            addOrUpdateRecord({ title, description, tag, id: null });
+        }
+    }
+
+    // 背景处理: 更换背景图片 (完全符合浅色系半透明，因为上层有白膜)
+    function setBackgroundImage(url) {
+        currentBgUrl = url;
+        const bgLayerDiv = document.getElementById('bgLayer');
+        if (bgLayerDiv) {
+            bgLayerDiv.style.backgroundImage = `url('${url}')`;
+        }
+        // 保存用户选择的背景
+        localStorage.setItem('fav_background_url', url);
+        updateBgThumbActive(url);
+    }
+
+    // 渲染背景缩略图栏
+    function buildBgPicker() {
+        if (!bgPickerPanel) return;
+        bgPickerPanel.innerHTML = '';
+        // 预设缩略图
+        PRESET_BGS.forEach(bg => {
+            const thumb = document.createElement('div');
+            thumb.className = 'bg-thumb';
+            thumb.style.backgroundImage = `url('${bg.url}?w=80&h=80&fit=crop')`;
+            thumb.style.backgroundSize = 'cover';
+            thumb.title = bg.name;
+            thumb.addEventListener('click', () => setBackgroundImage(bg.url));
+            bgPickerPanel.appendChild(thumb);
+        });
+        // 本地上传按钮（浅色图片上传）
+        const uploadDiv = document.createElement('div');
+        uploadDiv.className = 'bg-thumb upload-bg';
+        uploadDiv.innerHTML = '📷';
+        uploadDiv.title = '上传你的浅色图片';
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/jpeg,image/png,image/webp';
+        fileInput.style.display = 'none';
+        uploadDiv.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const imgUrl = ev.target.result;
+                    setBackgroundImage(imgUrl);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('请选择图片文件');
+            }
+        });
+        bgPickerPanel.appendChild(uploadDiv);
+        bgPickerPanel.appendChild(fileInput);
+
+        // 添加一个「重置默认浅色背景」的小按钮（可选）
+        const resetBtn = document.createElement('div');
+        resetBtn.className = 'bg-thumb upload-bg';
+        resetBtn.innerHTML = '🔄';
+        resetBtn.title = '重置默认背景';
+        resetBtn.addEventListener('click', () => {
+            setBackgroundImage(PRESET_BGS[2].url);
+        });
+        bgPickerPanel.appendChild(resetBtn);
+
+        // 高亮当前激活背景
+        updateBgThumbActive(currentBgUrl);
+    }
+
+    function updateBgThumbActive(activeUrl) {
+        if (!bgPickerPanel) return;
+        const thumbs = bgPickerPanel.querySelectorAll('.bg-thumb');
+        thumbs.forEach(thumb => {
+            const bgImg = thumb.style.backgroundImage;
+            if (bgImg && bgImg.includes(activeUrl.substring(0, 40))) {
+                thumb.classList.add('active');
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
+    }
+
+    // 恢复保存的背景
+    function loadSavedBackground() {
+        const savedBg = localStorage.getItem('fav_background_url');
+        if (savedBg && savedBg !== '') {
+            currentBgUrl = savedBg;
+        } else {
+            currentBgUrl = PRESET_BGS[2].url;
+        }
+        setBackgroundImage(currentBgUrl);
+    }
+
+    // 简单的防XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // 事件绑定
+    function bindEvents() {
+        openAddModalBtn.addEventListener('click', openAddModal);
+        openBgPanelBtn.addEventListener('click', () => {
+            // 简单滑动显示提醒而已，已经显示栏，不额外动作；或滚动到角落
+            bgPickerPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        cancelModalBtn.addEventListener('click', closeModal);
+        saveItemBtn.addEventListener('click', handleSave);
+        // 点击模态背景关闭
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeModal();
+        });
+    }
+
+    // 初始化数据
+    function init() {
+        loadRecords();
+        bindEvents();
+        loadSavedBackground();
+        buildBgPicker();
+        // 如果没有数据且为了演示友好可不加示例，保持纯净让用户添加
+        if (records.length === 0) {
+            // 添加一条优雅样例 (可选，为了展现卡片风格)
+            const sample = {
+                id: Date.now(),
+                title: '🎬 电影《天使爱美丽》',
+                description: '色彩温暖，对生活细节的俏皮与善意，每次看都觉得世界明亮。',
+                tag: '电影',
+                createdAt: Date.now()
+            };
+            records.push(sample);
+            saveToLocal(); // 触发保存和渲染
+        }
+        renderCards();
+        updateCount();
+    }
+
+    init();
+</script>
+</body>
+</html>
